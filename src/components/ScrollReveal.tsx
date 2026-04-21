@@ -1,0 +1,70 @@
+'use client';
+
+import { useEffect, useRef, memo } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { cn } from "@/src/lib/utils";
+
+// Register GSAP plugin once at module level
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
+interface ScrollRevealProps {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  duration?: number;
+  y?: number;
+}
+
+const ScrollRevealComponent = memo(function ScrollRevealComponent({
+  children,
+  className,
+  delay = 0,
+  duration = 0.6,
+  y = 30,
+}: ScrollRevealProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        element,
+        {
+          opacity: 0,
+          y: y,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: duration,
+          delay: delay,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: element,
+            start: "top 90%", // Reveal slightly earlier for perceived speed
+            toggleActions: "play none none none",
+            once: true,
+            fastScrollEnd: true, // Performance optimization for fast scrolls
+          },
+        }
+      );
+    });
+
+    return () => ctx.revert();
+  }, [delay, duration, y]);
+
+  return (
+    <div ref={ref} className={cn(className)}>
+      {children}
+    </div>
+  );
+});
+
+export function ScrollReveal(props: ScrollRevealProps) {
+  return <ScrollRevealComponent {...props} />;
+}
